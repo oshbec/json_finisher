@@ -1,18 +1,14 @@
 defmodule JsonFinisher do
   @moduledoc """
-  Documentation for `JsonFinisher`.
+  Provides functionality to 'finish' partially complete JSON strings.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> JsonFinisher.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def finish_json(json_fragment) do
+    with {:ok, stack} <- JsonFinisher.StackBuilder.build_stack(json_fragment) do
+      closed_json = JsonFinisher.Closer.close_json(stack, json_fragment)
+      {:ok, closed_json}
+    else
+      {:error, reason} -> {:error, reason}
+    end
   end
 end
