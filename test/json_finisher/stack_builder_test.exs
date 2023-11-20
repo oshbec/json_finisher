@@ -10,12 +10,10 @@ defmodule JsonFinisher.StackBuilderTest do
     assert StackBuilder.build_stack("{") == {:ok, [:object]}
   end
 
-  @tag :skip
   test "stack for '[' should be [:array]" do
     assert StackBuilder.build_stack("[") == {:ok, [:array]}
   end
 
-  @tag :skip
   test "stack for '[{' should be [:object, :array]" do
     assert StackBuilder.build_stack("[{") == {:ok, [:object, :array]}
   end

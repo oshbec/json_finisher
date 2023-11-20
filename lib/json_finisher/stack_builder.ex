@@ -21,5 +21,6 @@ defmodule JsonFinisher.StackBuilder do
 
   # Pattern matching for specific characters
   defp process_char("{", stack), do: [:object | stack]
+  defp process_char("[", stack), do: [:array | stack]
   defp process_char(_, stack), do: stack
 end
