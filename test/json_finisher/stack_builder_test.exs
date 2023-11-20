@@ -42,4 +42,14 @@ defmodule JsonFinisher.StackBuilderTest do
     assert StackBuilder.build_stack("  \r \n {} \n ") == {:ok, []}
     assert StackBuilder.build_stack("\t\n   [] \t ") == {:ok, []}
   end
+
+  describe "object keys and values" do
+    test "stack for '{\"key' should be [:key, :kv, :object]" do
+      assert StackBuilder.build_stack(~S|{"key|) == {:ok, [:key, :kv, :object]}
+    end
+
+    test "stack for '{\"key\"' should be [:kv, :object]" do
+      assert StackBuilder.build_stack(~S|{"key"|) == {:ok, [:kv, :object]}
+    end
+  end
 end
