@@ -22,6 +22,22 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char(~S{"}, [:object | _] = stack), do: [:key, :kv | stack]
   defp process_char(":", [:kv | _] = stack), do: [:value | stack]
   defp process_char("n", [:value | _] = stack), do: [:null | stack]
+  defp process_char("t", [:value | _] = stack), do: [true | stack]
+
+  defp process_char("e", [true | rest]) do
+    rest
+    |> pop_if_matches(:value)
+    |> pop_if_matches(:kv)
+  end
+
+  defp process_char("f", [:value | _] = stack), do: [false | stack]
+
+  defp process_char("e", [false | rest]) do
+    rest
+    |> pop_if_matches(:value)
+    |> pop_if_matches(:kv)
+  end
+
   defp process_char(~S{"}, [:key | _] = stack), do: pop_if_matches(stack, :key)
   defp process_char("\\", [:key | _] = stack), do: [:escape | stack]
   defp process_char("l", [:null | _] = stack), do: [:null_l1 | stack]

@@ -69,6 +69,27 @@ defmodule JsonFinisher.StackBuilderTest do
     test "second `l` in a :null value closes the :null, value, and :kv" do
       assert StackBuilder.build_stack(~S|{"key":null|) == {:ok, [:object]}
     end
+
+    test "first `t` in a value indicates we're working on a true" do
+      assert StackBuilder.build_stack(~S|{"key":t|) == {:ok, [true, :value, :kv, :object]}
+      assert StackBuilder.build_stack(~S|{"key":tr|) == {:ok, [true, :value, :kv, :object]}
+      assert StackBuilder.build_stack(~S|{"key":tru|) == {:ok, [true, :value, :kv, :object]}
+    end
+
+    test "`e` in a :true closes :true, :value, and :kv" do
+      assert StackBuilder.build_stack(~S|{"key":true|) == {:ok, [:object]}
+    end
+
+    test "first `f` in a value indicates we're working on a :false" do
+      assert StackBuilder.build_stack(~S|{"key":f|) == {:ok, [false, :value, :kv, :object]}
+      assert StackBuilder.build_stack(~S|{"key":fa|) == {:ok, [false, :value, :kv, :object]}
+      assert StackBuilder.build_stack(~S|{"key":fal|) == {:ok, [false, :value, :kv, :object]}
+      assert StackBuilder.build_stack(~S|{"key":fals|) == {:ok, [false, :value, :kv, :object]}
+    end
+
+    test "`e` in a :false closes :false, :value, and :kv" do
+      assert StackBuilder.build_stack(~S|{"key":false|) == {:ok, [:object]}
+    end
   end
 
   describe "escapes" do
