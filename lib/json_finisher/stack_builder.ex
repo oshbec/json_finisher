@@ -20,8 +20,19 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char("}", stack), do: pop_if_matches(stack, :object)
   defp process_char("]", stack), do: pop_if_matches(stack, :array)
   defp process_char(~S{"}, [:object | _] = stack), do: [:key, :kv | stack]
+  defp process_char(":", [:kv | _] = stack), do: [:value | stack]
+  defp process_char("n", [:value | _] = stack), do: [:null | stack]
   defp process_char(~S{"}, [:key | _] = stack), do: pop_if_matches(stack, :key)
   defp process_char("\\", [:key | _] = stack), do: [:escape | stack]
+  defp process_char("l", [:null | _] = stack), do: [:null_l1 | stack]
+
+  defp process_char("l", [:null_l1 | rest]) do
+    rest
+    |> pop_if_matches(:null)
+    |> pop_if_matches(:value)
+    |> pop_if_matches(:kv)
+  end
+
   defp process_char(_, stack), do: stack
 
   # Helper function to pop the expected item from the stack

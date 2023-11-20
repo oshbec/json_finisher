@@ -51,6 +51,24 @@ defmodule JsonFinisher.StackBuilderTest do
     test "stack for '{\"key\"' should be [:kv, :object]" do
       assert StackBuilder.build_stack(~S|{"key"|) == {:ok, [:kv, :object]}
     end
+
+    test "colon (:) signals that we are now in a value" do
+      assert StackBuilder.build_stack(~S|{"key":|) == {:ok, [:value, :kv, :object]}
+    end
+
+    test "first `n` in a value indicates we're working on a null" do
+      assert StackBuilder.build_stack(~S|{"key":n|) == {:ok, [:null, :value, :kv, :object]}
+      assert StackBuilder.build_stack(~S|{"key":nu|) == {:ok, [:null, :value, :kv, :object]}
+    end
+
+    test "first `l` within :null indicates we are almost done with :null value" do
+      assert StackBuilder.build_stack(~S|{"key":nul|) ==
+               {:ok, [:null_l1, :null, :value, :kv, :object]}
+    end
+
+    test "second `l` in a :null value closes the :null, value, and :kv" do
+      assert StackBuilder.build_stack(~S|{"key":null|) == {:ok, [:object]}
+    end
   end
 
   describe "escapes" do
