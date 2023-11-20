@@ -106,6 +106,10 @@ defmodule JsonFinisher.StackBuilderTest do
     test "a non-digit signals the end of a :number within a :value" do
       assert StackBuilder.build_stack(~S|{"key":1.5 ,|) == {:ok, [:object]}
     end
+
+    test "a number based :string is not a :number" do
+      assert StackBuilder.build_stack(~S|{"key":"1.5|) == {:ok, [:string, :value, :kv, :object]}
+    end
   end
 
   describe "escapes" do
