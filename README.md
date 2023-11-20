@@ -1,21 +1,18 @@
 # JsonFinisher
 
-**TODO: Add description**
+![ci workflow](https://github.com/oshbec/json_finisher/actions/workflows/ci.yml/badge.svg)
 
-## Installation
+Takes a truncated JSON string and "finishes" it.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `json_finisher` to your list of dependencies in `mix.exs`:
+You might be streaming a response back from an LLM formatted in JSON. If the content is in response to a user request, you'll probably want to show results as they're being generated, rather than making the user wait for the full response to complete. If the response is JSON formatted, you're dealing with truncated JSON until the response is complete. Just about all JSON parsers won't be able to handle this as input.
 
-```elixir
-def deps do
-  [
-    {:json_finisher, "~> 0.1.0"}
-  ]
-end
-```
+`JsonFinisher` will take valid json that just happens to be truncated at any arbitrary point, and finish it up so that you can pass it into the perser of your choice. Some examples:
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/json_finisher>.
-
+| Truncated JSON    | Finished JSON        |
+| ----------------- | -------------------- |
+| `{`               | `{}`                 |
+| `[`               | `[]`                 |
+| `{"`              | `{}`                 |
+| `{"a`             | `{"a": null}`        |
+| `{"a": tr`        | `{"a": true}`        |
+| `{"a": {"b": "hi` | `{"a": {"b": "hi"}}` |
