@@ -22,8 +22,15 @@ defmodule JsonFinisher.StackBuilderTest do
     assert StackBuilder.build_stack("[{}") == {:ok, [:array]}
   end
 
-  @tag :skip
   test "stack for '[]' should be empty" do
     assert StackBuilder.build_stack("[]") == {:ok, []}
+  end
+
+  test "returns an error for structural mismatch with input '{]'" do
+    assert StackBuilder.build_stack("{]") == {:error, :structural_mismatch}
+  end
+
+  test "returns an error for structural mismatch with input ']'" do
+    assert StackBuilder.build_stack("]") == {:error, :structural_mismatch}
   end
 end
