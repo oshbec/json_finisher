@@ -38,8 +38,17 @@ defmodule JsonFinisher.StackBuilder do
     |> pop_if_matches(:kv)
   end
 
+  defp process_char(~S|"|, [:value | _] = stack), do: [:string | stack]
+
+  defp process_char(~S|"|, [:string | rest]) do
+    rest
+    |> pop_if_matches(:value)
+    |> pop_if_matches(:kv)
+  end
+
   defp process_char(~S{"}, [:key | _] = stack), do: pop_if_matches(stack, :key)
   defp process_char("\\", [:key | _] = stack), do: [:escape | stack]
+  defp process_char("\\", [:string | _] = stack), do: [:escape | stack]
   defp process_char("l", [:null | _] = stack), do: [:null_l1 | stack]
 
   defp process_char("l", [:null_l1 | rest]) do

@@ -90,6 +90,14 @@ defmodule JsonFinisher.StackBuilderTest do
     test "`e` in a :false closes :false, :value, and :kv" do
       assert StackBuilder.build_stack(~S|{"key":false|) == {:ok, [:object]}
     end
+
+    test "double-quote in a value begins a string" do
+      assert StackBuilder.build_stack(~S|{"key":"|) == {:ok, [:string, :value, :kv, :object]}
+    end
+
+    test "double-quote in a :string closes :string, :value, :kv" do
+      assert StackBuilder.build_stack(~S|{"key":"hello"|) == {:ok, [:object]}
+    end
   end
 
   describe "escapes" do
@@ -99,6 +107,16 @@ defmodule JsonFinisher.StackBuilderTest do
 
     test "escaped second quote in a key does not close the key" do
       assert StackBuilder.build_stack(~S|{"\"|) == {:ok, [:key, :kv, :object]}
+    end
+
+    test "escaped double-quote in a :string doesn't close it" do
+      assert StackBuilder.build_stack(~S|{"key":"hello\"|) ==
+               {:ok, [:string, :value, :kv, :object]}
+    end
+
+    test "escaped bracket :string doesn't try to close it" do
+      assert StackBuilder.build_stack(~S|{"key":"hello\}|) ==
+               {:ok, [:string, :value, :kv, :object]}
     end
   end
 end
