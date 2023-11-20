@@ -112,6 +112,16 @@ defmodule JsonFinisher.StackBuilderTest do
     end
   end
 
+  describe "nested objects" do
+    test "nested objects as values" do
+      assert StackBuilder.build_stack(~S|{"hello": {|) == {:ok, [:object, :value, :kv, :object]}
+    end
+
+    test "closing nested objects closes up the :kv pair" do
+      assert StackBuilder.build_stack(~S|{"hello": {}|) == {:ok, [:object]}
+    end
+  end
+
   describe "escapes" do
     test "escape added to the stack for an object key" do
       assert StackBuilder.build_stack("{\"\\") == {:ok, [:escape, :key, :kv, :object]}

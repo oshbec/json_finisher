@@ -17,8 +17,13 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char("{", stack), do: [:object | stack]
   defp process_char("[", stack), do: [:array | stack]
   defp process_char(_, []), do: [:structural_mismatch]
-  defp process_char("}", stack), do: pop_if_matches(stack, :object)
-  defp process_char("]", stack), do: pop_if_matches(stack, :array)
+
+  defp process_char("}", stack),
+    do: pop_if_matches(stack, :object) |> close_abstract_stack_layers()
+
+  defp process_char("]", stack),
+    do: pop_if_matches(stack, :array) |> close_abstract_stack_layers()
+
   defp process_char(~S{"}, [:object | _] = stack), do: [:key, :kv | stack]
   defp process_char(":", [:kv | _] = stack), do: [:value | stack]
   defp process_char("n", [:value | _] = stack), do: [:null | stack]
@@ -41,9 +46,7 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char(~S|"|, [:value | _] = stack), do: [:string | stack]
 
   defp process_char(~S|"|, [:string | rest]) do
-    rest
-    |> pop_if_matches(:value)
-    |> pop_if_matches(:kv)
+    rest |> close_abstract_stack_layers()
   end
 
   defp process_char(~S{"}, [:key | _] = stack), do: pop_if_matches(stack, :key)
@@ -54,8 +57,7 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char("l", [:null_l1 | rest]) do
     rest
     |> pop_if_matches(:null)
-    |> pop_if_matches(:value)
-    |> pop_if_matches(:kv)
+    |> close_abstract_stack_layers()
   end
 
   defp process_char(char, [:value | _] = stack)
@@ -84,17 +86,18 @@ defmodule JsonFinisher.StackBuilder do
             ] do
     # Process the end of the number
     rest
-    |> pop_if_matches(:value)
-    |> pop_if_matches(:kv)
+    |> close_abstract_stack_layers()
   end
-
-  # not in '0'..'9' and char not in ['.', 'e', 'E', '+', '-']
 
   defp process_char(_, stack), do: stack
 
   # Helper function to pop the expected item from the stack
   defp pop_if_matches([expected | rest], expected), do: rest
   defp pop_if_matches(stack, _), do: [:structural_mismatch | stack]
+
+  defp close_abstract_stack_layers([:value | rest]), do: close_abstract_stack_layers(rest)
+  defp close_abstract_stack_layers([:kv | rest]), do: close_abstract_stack_layers(rest)
+  defp close_abstract_stack_layers(stack), do: stack
 
   # Finalize the stack by checking for any :structural_mismatch markers
   defp finalize_stack(stack) do
