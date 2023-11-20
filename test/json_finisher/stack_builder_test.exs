@@ -98,6 +98,14 @@ defmodule JsonFinisher.StackBuilderTest do
     test "double-quote in a :string closes :string, :value, :kv" do
       assert StackBuilder.build_stack(~S|{"key":"hello"|) == {:ok, [:object]}
     end
+
+    test "a digit signals the start of a :number within a :value" do
+      assert StackBuilder.build_stack(~S|{"key":1|) == {:ok, [:number, :value, :kv, :object]}
+    end
+
+    test "a non-digit signals the end of a :number within a :value" do
+      assert StackBuilder.build_stack(~S|{"key":1.5 ,|) == {:ok, [:object]}
+    end
   end
 
   describe "escapes" do

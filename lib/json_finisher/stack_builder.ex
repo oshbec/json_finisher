@@ -58,6 +58,38 @@ defmodule JsonFinisher.StackBuilder do
     |> pop_if_matches(:kv)
   end
 
+  defp process_char(char, [:value | _] = stack)
+       when char in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "."] do
+    [:number | stack]
+  end
+
+  defp process_char(char, [:number | rest])
+       when char not in [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "-",
+              ".",
+              "e",
+              "E",
+              "+",
+              "-"
+            ] do
+    # Process the end of the number
+    rest
+    |> pop_if_matches(:value)
+    |> pop_if_matches(:kv)
+  end
+
+  # not in '0'..'9' and char not in ['.', 'e', 'E', '+', '-']
+
   defp process_char(_, stack), do: stack
 
   # Helper function to pop the expected item from the stack
