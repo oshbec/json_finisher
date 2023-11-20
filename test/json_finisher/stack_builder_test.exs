@@ -33,4 +33,8 @@ defmodule JsonFinisher.StackBuilderTest do
   test "returns an error for structural mismatch with input ']'" do
     assert StackBuilder.build_stack("]") == {:error, :structural_mismatch}
   end
+
+  test "returns an error for structural mismatch with non-JSON starting input 'a'" do
+    assert StackBuilder.build_stack("a") == {:error, :structural_mismatch}
+  end
 end

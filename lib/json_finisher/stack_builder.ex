@@ -16,6 +16,7 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char("[", stack), do: [:array | stack]
   defp process_char("}", stack), do: pop_if_matches(stack, :object)
   defp process_char("]", stack), do: pop_if_matches(stack, :array)
+  defp process_char(_, []), do: [:structural_mismatch]
   defp process_char(_, stack), do: stack
 
   # Helper function to pop the expected item from the stack
