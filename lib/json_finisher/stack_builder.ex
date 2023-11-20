@@ -6,6 +6,7 @@ defmodule JsonFinisher.StackBuilder do
   # Handling non-empty strings
   def build_stack(json_fragment) do
     json_fragment
+    |> String.trim()
     |> String.graphemes()
     |> Enum.reduce([], &process_char/2)
     |> finalize_stack()

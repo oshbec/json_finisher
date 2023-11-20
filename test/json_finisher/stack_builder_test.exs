@@ -37,4 +37,9 @@ defmodule JsonFinisher.StackBuilderTest do
   test "returns an error for structural mismatch with non-JSON starting input 'a'" do
     assert StackBuilder.build_stack("a") == {:error, :structural_mismatch}
   end
+
+  test "handles whitespace around top-level object or array" do
+    assert StackBuilder.build_stack("  \r \n {} \n ") == {:ok, []}
+    assert StackBuilder.build_stack("\t\n   [] \t ") == {:ok, []}
+  end
 end
