@@ -52,4 +52,14 @@ defmodule JsonFinisher.StackBuilderTest do
       assert StackBuilder.build_stack(~S|{"key"|) == {:ok, [:kv, :object]}
     end
   end
+
+  describe "escapes" do
+    test "escape added to the stack for an object key" do
+      assert StackBuilder.build_stack("{\"\\") == {:ok, [:escape, :key, :kv, :object]}
+    end
+
+    test "escaped second quote in a key does not close the key" do
+      assert StackBuilder.build_stack(~S|{"\"|) == {:ok, [:key, :kv, :object]}
+    end
+  end
 end
