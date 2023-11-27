@@ -43,7 +43,7 @@ defmodule JsonFinisher.StackBuilder do
     |> pop_if_matches(:kv)
   end
 
-  defp process_char(~S|"|, [:value | _] = stack), do: [:string | stack]
+  defp process_char(~S|"|, [top | _] = stack) when top in [:array, :value], do: [:string | stack]
 
   defp process_char(~S|"|, [:string | rest]) do
     rest |> close_abstract_stack_layers()
