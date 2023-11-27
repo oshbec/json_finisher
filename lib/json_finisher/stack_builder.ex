@@ -2,6 +2,8 @@ defmodule JsonFinisher.StackBuilder do
   @moduledoc """
   Builds a stack representing the structure of a partial JSON string.
   """
+  @number_start_chars ~w(0 1 2 3 4 5 6 7 8 9 - .)
+  @valid_number_chars ~w(0 1 2 3 4 5 6 7 8 9 - . e E + -)
 
   # Handling non-empty strings
   def build_stack(json_fragment) do
@@ -60,31 +62,11 @@ defmodule JsonFinisher.StackBuilder do
     |> close_abstract_stack_layers()
   end
 
-  defp process_char(char, [:value | _] = stack)
-       when char in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "."] do
+  defp process_char(char, [:value | _] = stack) when char in @number_start_chars do
     [:number | stack]
   end
 
-  defp process_char(char, [:number | rest])
-       when char not in [
-              "0",
-              "1",
-              "2",
-              "3",
-              "4",
-              "5",
-              "6",
-              "7",
-              "8",
-              "9",
-              "-",
-              ".",
-              "e",
-              "E",
-              "+",
-              "-"
-            ] do
-    # Process the end of the number
+  defp process_char(char, [:number | rest]) when char not in @valid_number_chars do
     rest
     |> close_abstract_stack_layers()
   end
