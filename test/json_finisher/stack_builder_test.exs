@@ -103,6 +103,10 @@ defmodule JsonFinisher.StackBuilderTest do
       assert build_stack(~S|{"key":1|) == {:ok, [:number, :value, :kv, :object]}
     end
 
+    test "a } ends both the number and object" do
+      assert build_stack(~S|{"key":1.5}|) == {:ok, []}
+    end
+
     test "a non-digit signals the end of a :number within a :value" do
       assert build_stack(~S|{"key":1.5 ,|) == {:ok, [:object]}
     end
@@ -205,6 +209,30 @@ defmodule JsonFinisher.StackBuilderTest do
 
     test "recognizes unfinished null in an array" do
       assert build_stack(~S|[nu|) == {:ok, [:null, :array]}
+    end
+
+    test "handles multiple values in array" do
+      assert build_stack(~S|["hi", "hello"]|) == {:ok, []}
+    end
+
+    test "handles single values in complete array" do
+      assert build_stack(~S|["hi"]|) == {:ok, []}
+    end
+
+    test "handles single value with commas in complete array" do
+      assert build_stack(~S|["hi"]|) == {:ok, []}
+    end
+
+    test "handles multiple array-ish values in array" do
+      assert build_stack(~S|["1,2,3|) == {:ok, [:string, :array]}
+    end
+
+    test "handles number value at end of complete array" do
+      assert build_stack(~S|[1,2,3]|) == {:ok, []}
+    end
+
+    test "handles trailing array comma" do
+      assert build_stack(~S|[1,2,|) == {:ok, [:array]}
     end
   end
 end
