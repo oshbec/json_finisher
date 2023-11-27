@@ -28,8 +28,8 @@ defmodule JsonFinisher.StackBuilder do
 
   defp process_char(~S{"}, [:object | _] = stack), do: [:key, :kv | stack]
   defp process_char(":", [:kv | _] = stack), do: [:value | stack]
-  defp process_char("n", [:value | _] = stack), do: [:null | stack]
-  defp process_char("t", [:value | _] = stack), do: [true | stack]
+  defp process_char("n", [top | _] = stack) when top in [:array, :value], do: [:null | stack]
+  defp process_char("t", [top | _] = stack) when top in [:array, :value], do: [true | stack]
 
   defp process_char("e", [true | rest]) do
     rest
@@ -37,7 +37,7 @@ defmodule JsonFinisher.StackBuilder do
     |> pop_if_matches(:kv)
   end
 
-  defp process_char("f", [:value | _] = stack), do: [false | stack]
+  defp process_char("f", [top | _] = stack) when top in [:array, :value], do: [false | stack]
 
   defp process_char("e", [false | rest]) do
     rest
@@ -62,7 +62,8 @@ defmodule JsonFinisher.StackBuilder do
     |> close_abstract_stack_layers()
   end
 
-  defp process_char(char, [:value | _] = stack) when char in @number_start_chars do
+  defp process_char(char, [top | _] = stack)
+       when char in @number_start_chars and top in [:array, :value] do
     [:number | stack]
   end
 

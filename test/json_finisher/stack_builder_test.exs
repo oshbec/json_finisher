@@ -182,5 +182,29 @@ defmodule JsonFinisher.StackBuilderTest do
     test "accounts for finished string in array" do
       assert build_stack(~S|["hi"|) == {:ok, [:array]}
     end
+
+    test "recognizes unfinished number in array" do
+      assert build_stack(~S|[1|) == {:ok, [:number, :array]}
+    end
+
+    test "accounts for finished number in array" do
+      assert build_stack(~S|[1,|) == {:ok, [:array]}
+    end
+
+    test "recognizes unfinished object in an array" do
+      assert build_stack(~S|[{|) == {:ok, [:object, :array]}
+    end
+
+    test "recognizes unfinished true in an array" do
+      assert build_stack(~S|[tr|) == {:ok, [true, :array]}
+    end
+
+    test "recognizes unfinished false in an array" do
+      assert build_stack(~S|[fa|) == {:ok, [false, :array]}
+    end
+
+    test "recognizes unfinished null in an array" do
+      assert build_stack(~S|[nu|) == {:ok, [:null, :array]}
+    end
   end
 end
