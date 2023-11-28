@@ -235,4 +235,27 @@ defmodule JsonFinisher.StackBuilderTest do
       assert build_stack(~S|[1,2,|) == {:ok, [:array]}
     end
   end
+
+  describe "nesting" do
+    test "handles nested objects" do
+      assert build_stack(~S|{"hello":{"world":true}}|) == {:ok, []}
+    end
+
+    test "handles nested objects with incommplete number value" do
+      assert build_stack(~S|{"hello":{"world":1|) ==
+               {:ok, [:number, :value, :kv, :object, :value, :kv, :object]}
+    end
+
+    test "handles nested objects ending in numerical value with incomplete outer object" do
+      assert build_stack(~S|{"hello":{"world":1}|) == {:ok, [:object]}
+    end
+
+    test "handles nested objects with incomplete outer object" do
+      assert build_stack(~S|{"hello":{"world":true}|) == {:ok, [:object]}
+    end
+
+    test "handles objects nested in incomplete array" do
+      assert build_stack(~S|[{"world":1}|) == {:ok, [:array]}
+    end
+  end
 end
