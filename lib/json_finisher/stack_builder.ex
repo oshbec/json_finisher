@@ -1,7 +1,37 @@
 defmodule JsonFinisher.StackBuilder do
   @moduledoc """
-  Builds a stack representing the structure of a partial JSON string.
+  The `JsonFinisher.StackBuilder` module processes truncated JSON strings to infer their structural state at the point of truncation. It is particularly useful for applications handling incomplete JSON data, enabling them to understand, complete, or correct the data.
+
+  ## Implementation Approach
+  Using Elixir's pattern matching, the module parses JSON strings character-by-character. It builds a stack that represents the JSON structure, tracking the context (objects, arrays, values) and special cases (e.g., escaped characters, partial literals).
+
+  ### Process Overview
+  1. **Character Processing:** Breaks down the JSON fragment into graphemes for individual analysis.
+  2. **Stack Building:** Dynamically constructs a stack to track the JSON structure context.
+  3. **Special Case Handling:** Manages unique JSON structures like escaped characters and various number formats.
+  4. **Finalization:** Finalizes the stack, flagging structural mismatches or representing the truncation point.
+
+  ### Stack Elements
+  - **Structural Atoms**: `:object`, `:array`
+  - **Value Type Atoms**: `:number`, `:string`, `:true`, `:false`, `:null`
+  - **Intermediate State Atoms**: `:kv` (key-value context), `:key`, `:value`
+  - **Special Atoms**: `:escape` (escape character), `:null_l1` (partial `null`)
+  - **Error Atom**: `:structural_mismatch` (structure errors)
+
+  These atoms reveal the JSON fragment's context and state at each processing step.
+
+  ### Usage Examples
+
+  The following examples demonstrate how the module can be used to process truncated JSON strings:
+
+  ```elixir
+  iex> JsonFinisher.StackBuilder.build_stack("{\"key\": [1, 2, nu")
+  {:ok, [:null, :array, :value, :kv, :object]}
+
+  iex> JsonFinisher.StackBuilder.build_stack("{\"key\": [1}")
+  {:error, :structural_mismatch}
   """
+
   @number_start_chars ~w(0 1 2 3 4 5 6 7 8 9 - .)
   @valid_number_chars ~w(0 1 2 3 4 5 6 7 8 9 - . e E + -)
 
