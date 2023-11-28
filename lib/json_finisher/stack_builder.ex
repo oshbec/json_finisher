@@ -19,23 +19,32 @@ defmodule JsonFinisher.StackBuilder do
   - **Error Atom**: `:structural_mismatch` (structure errors)
 
   These atoms reveal the JSON fragment's context and state at each processing step.
-
-  ### Usage Examples
-
-  The following examples demonstrate how the module can be used to process truncated JSON strings:
-
-  ```elixir
-  iex> JsonFinisher.StackBuilder.build_stack("{\"key\": [1, 2, nu")
-  {:ok, [:null, :array, :value, :kv, :object]}
-
-  iex> JsonFinisher.StackBuilder.build_stack("{\"key\": [1}")
-  {:error, :structural_mismatch}
   """
 
   @number_start_chars ~w(0 1 2 3 4 5 6 7 8 9 - .)
   @valid_number_chars ~w(0 1 2 3 4 5 6 7 8 9 - . e E + -)
 
-  # Handling non-empty strings
+  @doc """
+  Builds a stack representing the structural state of a partially truncated JSON string.
+
+  This function takes a JSON fragment as input, processes it character-by-character, and builds a stack that reflects the structure of the JSON at the point of truncation. It can handle various JSON elements like objects, arrays, strings, numbers, booleans, and null values.
+
+  ## Parameters
+    - `json_fragment`: A string representing the truncated JSON data.
+
+  ## Returns
+    - On successful processing, it returns `{:ok, stack}` where `stack` is a list of atoms representing the JSON structure.
+    - If a structural mismatch is detected, it returns `{:error, :structural_mismatch}`.
+
+  ## Examples
+
+      iex> JsonFinisher.StackBuilder.build_stack("{\"key\": [1, 2, nu")
+      {:ok, [:null, :array, :value, :kv, :object]}
+
+      iex> JsonFinisher.StackBuilder.build_stack("{]")
+      {:error, :structural_mismatch}
+
+  """
   def build_stack(json_fragment) do
     json_fragment
     |> String.trim()
