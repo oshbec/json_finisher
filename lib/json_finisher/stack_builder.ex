@@ -31,34 +31,25 @@ defmodule JsonFinisher.StackBuilder do
   defp process_char("]", stack),
     do: pop_if_matches(stack, :array) |> close_abstract_stack_layers()
 
-  defp process_char(~S{"}, [:object | _] = stack), do: [:key, :kv | stack]
   defp process_char(":", [:kv | _] = stack), do: [:value | stack]
-  defp process_char("n", [top | _] = stack) when top in [:array, :value], do: [:null | stack]
+
   defp process_char("t", [top | _] = stack) when top in [:array, :value], do: [true | stack]
-
-  defp process_char("e", [true | rest]) do
-    rest
-    |> pop_if_matches(:value)
-    |> pop_if_matches(:kv)
-  end
-
   defp process_char("f", [top | _] = stack) when top in [:array, :value], do: [false | stack]
+  defp process_char("e", [bool, :value, :kv | rest]) when bool in [true, false], do: rest
+  defp process_char("e", [bool | rest]) when bool in [true, false], do: rest
 
-  defp process_char("e", [false | rest]) do
-    rest
-    |> pop_if_matches(:value)
-    |> pop_if_matches(:kv)
-  end
-
+  defp process_char(~S|"|, [:object | _] = stack), do: [:key, :kv | stack]
   defp process_char(~S|"|, [top | _] = stack) when top in [:array, :value], do: [:string | stack]
+  defp process_char(~S|"|, [:key | _] = stack), do: pop_if_matches(stack, :key)
 
   defp process_char(~S|"|, [:string | rest]) do
     rest |> close_abstract_stack_layers()
   end
 
-  defp process_char(~S{"}, [:key | _] = stack), do: pop_if_matches(stack, :key)
   defp process_char("\\", [:key | _] = stack), do: [:escape | stack]
   defp process_char("\\", [:string | _] = stack), do: [:escape | stack]
+
+  defp process_char("n", [top | _] = stack) when top in [:array, :value], do: [:null | stack]
   defp process_char("l", [:null | _] = stack), do: [:null_l1 | stack]
 
   defp process_char("l", [:null_l1 | rest]) do

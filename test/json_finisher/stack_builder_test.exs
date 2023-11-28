@@ -2,103 +2,105 @@ defmodule JsonFinisher.StackBuilderTest do
   use ExUnit.Case, async: true
   import JsonFinisher.StackBuilder
 
-  test "Empty string results in empty stack" do
-    assert build_stack("") == {:ok, []}
-  end
-
-  test "Single opening brace '{' creates an object stack" do
-    assert build_stack("{") == {:ok, [:object]}
-  end
-
-  test "Single opening bracket '[' creates an array stack" do
-    assert build_stack("[") == {:ok, [:array]}
-  end
-
-  test "Combining '{' and '[' results in object within array stack" do
-    assert build_stack("[{") == {:ok, [:object, :array]}
-  end
-
-  test "Opening and closing brace within brackets results in array stack" do
-    assert build_stack("[{}") == {:ok, [:array]}
-  end
-
-  test "Empty brackets '[]' result in empty stack" do
-    assert build_stack("[]") == {:ok, []}
-  end
-
-  test "Structural mismatch error with '{]' input" do
-    assert build_stack("{]") == {:error, :structural_mismatch}
-  end
-
-  test "Structural mismatch error with lone ']' input" do
-    assert build_stack("]") == {:error, :structural_mismatch}
-  end
-
-  test "Error on non-JSON starting character 'a'" do
-    assert build_stack("a") == {:error, :structural_mismatch}
-  end
-
-  test "Handling whitespace around empty JSON structures" do
-    assert build_stack("  \r \n {} \n ") == {:ok, []}
-    assert build_stack("\t\n   [] \t ") == {:ok, []}
-  end
-
-  describe "object keys and values" do
-    test "Unfinished object key adds key, kv, and object to stack" do
-      assert build_stack(~S|{"key|) == {:ok, [:key, :kv, :object]}
+  describe "outer json structure" do
+    test "Empty string results in empty stack" do
+      assert build_stack("") == {:ok, []}
     end
 
-    test "Closed object key adds kv and object to stack" do
-      assert build_stack(~S|{"key"|) == {:ok, [:kv, :object]}
+    test "Single opening brace '{' creates an object stack" do
+      assert build_stack("{") == {:ok, [:object]}
     end
 
-    test "Colon in object indicates start of value" do
-      assert build_stack(~S|{"key":|) == {:ok, [:value, :kv, :object]}
+    test "Single opening bracket '[' creates an array stack" do
+      assert build_stack("[") == {:ok, [:array]}
     end
 
-    test "Initial 'n' in object value indicates null start" do
+    test "Combining '{' and '[' results in object within array stack" do
+      assert build_stack("[{") == {:ok, [:object, :array]}
+    end
+
+    test "Opening and closing brace within brackets results in array stack" do
+      assert build_stack("[{}") == {:ok, [:array]}
+    end
+
+    test "Empty brackets '[]' result in empty stack" do
+      assert build_stack("[]") == {:ok, []}
+    end
+
+    test "Structural mismatch error with '{]' input" do
+      assert build_stack("{]") == {:error, :structural_mismatch}
+    end
+
+    test "Structural mismatch error with lone ']' input" do
+      assert build_stack("]") == {:error, :structural_mismatch}
+    end
+
+    test "Error on non-JSON starting character 'a'" do
+      assert build_stack("a") == {:error, :structural_mismatch}
+    end
+
+    test "Handling whitespace around empty JSON structures" do
+      assert build_stack("  \r \n {} \n ") == {:ok, []}
+      assert build_stack("\t\n   [] \t ") == {:ok, []}
+    end
+  end
+
+  describe "word values: true, false, null" do
+    test "null progression as an object value" do
       assert build_stack(~S|{"key":n|) == {:ok, [:null, :value, :kv, :object]}
       assert build_stack(~S|{"key":nu|) == {:ok, [:null, :value, :kv, :object]}
-    end
 
-    test "Progressing through null spelling in object value" do
       assert build_stack(~S|{"key":nul|) ==
                {:ok, [:null_l1, :null, :value, :kv, :object]}
-    end
 
-    test "Completing null value in object closes null, value, and kv" do
       assert build_stack(~S|{"key":null|) == {:ok, [:object]}
     end
 
-    test "Initial 't' in value suggests true start in object" do
+    test "null progression as an array value" do
+      assert build_stack(~S|[n|) == {:ok, [:null, :array]}
+      assert build_stack(~S|[nu|) == {:ok, [:null, :array]}
+
+      assert build_stack(~S|[nul|) == {:ok, [:null_l1, :null, :array]}
+
+      assert build_stack(~S|[null|) == {:ok, [:array]}
+    end
+
+    test "true progression as an object value" do
       assert build_stack(~S|{"key":t|) == {:ok, [true, :value, :kv, :object]}
       assert build_stack(~S|{"key":tr|) == {:ok, [true, :value, :kv, :object]}
       assert build_stack(~S|{"key":tru|) == {:ok, [true, :value, :kv, :object]}
-    end
 
-    test "Completing true value in object closes true, value, and kv" do
       assert build_stack(~S|{"key":true|) == {:ok, [:object]}
     end
 
-    test "Initial 'f' in value indicates false start in object" do
+    test "true progression as an array value" do
+      assert build_stack(~S|[t|) == {:ok, [true, :array]}
+      assert build_stack(~S|[tr|) == {:ok, [true, :array]}
+      assert build_stack(~S|[tru|) == {:ok, [true, :array]}
+
+      assert build_stack(~S|[true|) == {:ok, [:array]}
+    end
+
+    test "false progression as an object value" do
       assert build_stack(~S|{"key":f|) == {:ok, [false, :value, :kv, :object]}
       assert build_stack(~S|{"key":fa|) == {:ok, [false, :value, :kv, :object]}
       assert build_stack(~S|{"key":fal|) == {:ok, [false, :value, :kv, :object]}
       assert build_stack(~S|{"key":fals|) == {:ok, [false, :value, :kv, :object]}
-    end
 
-    test "Completing false value in object" do
       assert build_stack(~S|{"key":false|) == {:ok, [:object]}
     end
 
-    test "Double quote starts a string value in object" do
-      assert build_stack(~S|{"key":"|) == {:ok, [:string, :value, :kv, :object]}
-    end
+    test "false progression as an array value" do
+      assert build_stack(~S|[f|) == {:ok, [false, :array]}
+      assert build_stack(~S|[fa|) == {:ok, [false, :array]}
+      assert build_stack(~S|[fal|) == {:ok, [false, :array]}
+      assert build_stack(~S|[fals|) == {:ok, [false, :array]}
 
-    test "Closing double quote finishes string value in object" do
-      assert build_stack(~S|{"key":"hello"|) == {:ok, [:object]}
+      assert build_stack(~S|[false|) == {:ok, [:array]}
     end
+  end
 
+  describe "number values" do
     test "Digit in object value starts number" do
       assert build_stack(~S|{"key":1|) == {:ok, [:number, :value, :kv, :object]}
     end
@@ -140,17 +142,29 @@ defmodule JsonFinisher.StackBuilderTest do
     end
   end
 
-  describe "nested objects" do
-    test "nested objects as values" do
-      assert build_stack(~S|{"hello": {|) == {:ok, [:object, :value, :kv, :object]}
+  describe "object keys and values" do
+    test "Unfinished object key adds key, kv, and object to stack" do
+      assert build_stack(~S|{"key|) == {:ok, [:key, :kv, :object]}
     end
 
-    test "closing nested objects closes up the :kv pair" do
-      assert build_stack(~S|{"hello": {}|) == {:ok, [:object]}
+    test "Closed object key adds kv and object to stack" do
+      assert build_stack(~S|{"key"|) == {:ok, [:kv, :object]}
+    end
+
+    test "Colon in object indicates start of value" do
+      assert build_stack(~S|{"key":|) == {:ok, [:value, :kv, :object]}
+    end
+
+    test "Double quote starts a string value in object" do
+      assert build_stack(~S|{"key":"|) == {:ok, [:string, :value, :kv, :object]}
+    end
+
+    test "Closing double quote finishes string value in object" do
+      assert build_stack(~S|{"key":"hello"|) == {:ok, [:object]}
     end
   end
 
-  describe "escapes" do
+  describe "escaped characters" do
     test "escape added to the stack for an object key" do
       assert build_stack("{\"\\") == {:ok, [:escape, :key, :kv, :object]}
     end
@@ -237,6 +251,14 @@ defmodule JsonFinisher.StackBuilderTest do
   end
 
   describe "nesting" do
+    test "nested objects as values" do
+      assert build_stack(~S|{"hello": {|) == {:ok, [:object, :value, :kv, :object]}
+    end
+
+    test "closing nested objects closes up the :kv pair" do
+      assert build_stack(~S|{"hello": {}|) == {:ok, [:object]}
+    end
+
     test "handles nested objects" do
       assert build_stack(~S|{"hello":{"world":true}}|) == {:ok, []}
     end
