@@ -13,5 +13,15 @@ defmodule JsonFinisher.Closer do
     close_json(json_fragment, stack)
   end
 
+  def close_json(string_fragment, [:string | stack]) do
+    string_fragment = string_fragment <> ~S(")
+    close_json(string_fragment, stack)
+  end
+
+  def close_json(string_fragment, [:key, :kv | stack]) do
+    string_fragment = string_fragment <> ~S(":null)
+    close_json(string_fragment, stack)
+  end
+
   def close_json(json_fragment, []), do: json_fragment
 end
