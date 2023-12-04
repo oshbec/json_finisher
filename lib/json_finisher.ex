@@ -3,9 +3,12 @@ defmodule JsonFinisher do
   Provides functionality to 'finish' partially complete JSON strings.
   """
 
-  def finish_json(json_fragment) do
-    with {:ok, stack} <- JsonFinisher.StackBuilder.build_stack(json_fragment) do
-      closed_json = JsonFinisher.Closer.close_json(stack, json_fragment)
+  import JsonFinisher.Closer
+  import JsonFinisher.StackBuilder
+
+  def finish_json(fragment) do
+    with {:ok, stack} <- build_stack(fragment) do
+      closed_json = close_json(fragment, stack)
       {:ok, closed_json}
     else
       {:error, reason} -> {:error, reason}

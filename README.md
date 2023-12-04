@@ -12,7 +12,7 @@ You might be streaming a response back from an LLM formatted in JSON. If the con
 | ----------------- | -------------------- |
 | `{`               | `{}`                 |
 | `[`               | `[]`                 |
-| `{"`              | `{}`                 |
+| `{"`              | `{"":null}`          |
 | `{"a`             | `{"a": null}`        |
 | `{"a": tr`        | `{"a": true}`        |
 | `{"a": {"b": "hi` | `{"a": {"b": "hi"}}` |
