@@ -4,27 +4,46 @@ defmodule JsonFinisher.Closer do
   """
 
   def close_json(fragment, [:array | stack]) do
+    fragment = fragment |> String.trim() |> String.trim(",")
     fragment = fragment <> "]"
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
   def close_json(fragment, [:object | stack]) do
+    fragment = fragment |> String.trim() |> String.trim(",")
     fragment = fragment <> "}"
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
   def close_json(fragment, [:string | stack]) do
     fragment = fragment <> ~S(")
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
   def close_json(fragment, [:key, :kv | stack]) do
     fragment = fragment <> ~S(":null)
+    stack = close_abstract_stack_layers(stack)
+    close_json(fragment, stack)
+  end
+
+  def close_json(fragment, [:kv | stack]) do
+    fragment = fragment <> ~S(:null)
+    stack = close_abstract_stack_layers(stack)
+    close_json(fragment, stack)
+  end
+
+  def close_json(fragment, [:value, :kv | stack]) do
+    fragment = fragment <> ~S(null)
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
   def close_json(fragment, [:null_l1, :null | stack]) do
     fragment = fragment <> ~S(l)
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
@@ -39,6 +58,7 @@ defmodule JsonFinisher.Closer do
       end
 
     fragment = fragment <> rest
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
@@ -52,6 +72,7 @@ defmodule JsonFinisher.Closer do
       end
 
     fragment = fragment <> rest
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
@@ -65,11 +86,24 @@ defmodule JsonFinisher.Closer do
       end
 
     fragment = fragment <> rest
+    stack = close_abstract_stack_layers(stack)
     close_json(fragment, stack)
   end
 
-  def close_json(fragment, [:number | stack]), do: close_json(fragment, stack)
-  def close_json(fragment, [:value | stack]), do: close_json(fragment, stack)
-  def close_json(fragment, [:kv | stack]), do: close_json(fragment, stack)
+  def close_json(fragment, [:escape | stack]) do
+    fragment = fragment <> ~S(")
+    stack = close_abstract_stack_layers(stack)
+    close_json(fragment, stack)
+  end
+
+  def close_json(fragment, [:number | stack]) do
+    stack = close_abstract_stack_layers(stack)
+    close_json(fragment, stack)
+  end
+
   def close_json(fragment, []), do: fragment
+
+  defp close_abstract_stack_layers([:value | stack]), do: close_abstract_stack_layers(stack)
+  defp close_abstract_stack_layers([:kv | stack]), do: close_abstract_stack_layers(stack)
+  defp close_abstract_stack_layers(stack), do: stack
 end

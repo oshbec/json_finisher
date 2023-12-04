@@ -1,0 +1,29 @@
+{
+    "hello": "world",
+    "list of sandwiches": [
+        "ham",
+        "cheese",
+        "tuna"
+    ],
+    "list of people": [
+        {
+            "name": "John",
+            "age": 30
+        },
+        {
+            "name": "Jane",
+            "age": 25
+        }
+    ],
+    "some values": [3, "hello", true, false, null, {"hello": "world"}],
+    "vehicle specifications": {
+        "wheels": 4,
+        "doors": 5,
+        "features": ["air conditioning", "power steering", "electric windows"],
+        "engine": {
+            "fuel": "petrol",
+            "power": 100
+        }
+    },
+    "strange { \"hello\": \"world\" } key": "normal value"
+}

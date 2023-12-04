@@ -55,17 +55,26 @@ defmodule JsonFinisher.StackBuilder do
 
   # Pattern matching for specific characters
   defp process_char(_, [:escape | rest]), do: rest
+
+  defp process_char("{", [top | _] = stack) when top in [:key, :string], do: stack
   defp process_char("{", stack), do: [:object | stack]
+
+  defp process_char("[", [top | _] = stack) when top in [:key, :string], do: stack
   defp process_char("[", stack), do: [:array | stack]
+
   defp process_char(_, []), do: [:structural_mismatch]
 
   defp process_char("}", [:number, :value, :kv, :object, :value, :kv | rest]), do: rest
   defp process_char("}", [:number, :value, :kv, :object | rest]), do: rest
 
+  defp process_char("}", [top | _] = stack) when top in [:key, :string], do: stack
+
   defp process_char("}", stack),
     do: pop_if_matches(stack, :object) |> close_abstract_stack_layers()
 
   defp process_char("]", [:number, :array | rest]), do: rest
+
+  defp process_char("]", [top | _] = stack) when top in [:key, :string], do: stack
 
   defp process_char("]", stack),
     do: pop_if_matches(stack, :array) |> close_abstract_stack_layers()
