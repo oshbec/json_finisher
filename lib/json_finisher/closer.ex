@@ -68,6 +68,7 @@ defmodule JsonFinisher.Closer do
     close_json(fragment, stack)
   end
 
+  def close_json(fragment, [:number | stack]), do: close_json(fragment, stack)
   def close_json(fragment, [:value | stack]), do: close_json(fragment, stack)
   def close_json(fragment, [:kv | stack]), do: close_json(fragment, stack)
   def close_json(fragment, []), do: fragment

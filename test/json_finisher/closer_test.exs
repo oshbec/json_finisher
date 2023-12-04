@@ -46,4 +46,8 @@ defmodule JsonFinisher.CloserTest do
     assert close_json(~S|{"foo":nul|, [:null_l1, :null, :value, :value, :kv, :object]) ==
              ~S({"foo":null})
   end
+
+  test "close number value" do
+    assert close_json(~S([1), [:number, :array]) == ~S([1])
+  end
 end
