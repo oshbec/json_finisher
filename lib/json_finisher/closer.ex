@@ -23,6 +23,11 @@ defmodule JsonFinisher.Closer do
     close_json(fragment, stack)
   end
 
+  def close_json(fragment, [:null_l1, :null | stack]) do
+    fragment = fragment <> ~S(l)
+    close_json(fragment, stack)
+  end
+
   def close_json(fragment, [false | stack]) do
     rest =
       case String.last(fragment) do
@@ -47,11 +52,6 @@ defmodule JsonFinisher.Closer do
       end
 
     fragment = fragment <> rest
-    close_json(fragment, stack)
-  end
-
-  def close_json(fragment, [:null_l1, :null | stack]) do
-    fragment = fragment <> ~S(l)
     close_json(fragment, stack)
   end
 
